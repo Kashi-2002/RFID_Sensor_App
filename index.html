@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.0/xlsx.full.min.js"></script>
+
+</head>
+<body>
+
+<h1 >RFID ATTENDANCE SYSTEM</h1>
+    <div id="container" ></div> 
+
+
+    <script>
+async function readExcelFromURL(url) {
+//   try {
+    const response = await axios.get(url, { responseType: 'arraybuffer' });
+    const data = new Uint8Array(response.data);
+    const workbook = XLSX.read(data, { type: 'array' });
+
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+    
+    // console.log(jsonData);
+
+    return jsonData;
+//   } catch (error) {
+//     console.error('Error reading Excel file:', error);
+//   }
+}
+
+async function createtable(){
+    const excelURL = 'https://docs.google.com/spreadsheets/d/1xTzdGStzkXcx3TXTJ5Qsbt_DHCuiYJabm147_NqDhAA/edit#gid=0';
+    const jsonData= await readExcelFromURL(excelURL);
+            // const currentRowCount =  externalTable.rows.length;
+            console.log(Object.keys(jsonData).length);
+            console.log(jsonData)
+            let table = document.createElement("table");
+         
+         // Get the keys (column names) of the first object in the JSON data
+         let cols = Object.keys(jsonData[1]);
+         let thead = document.createElement("thead");
+         let tr = document.createElement("tr");
+            // cols.forEach((item) => {
+        for(let i=0;i<4;i++){
+            let th = document.createElement("th");
+            th.innerText = jsonData[1][i]; // Set the column name as the text of the header cell
+            tr.appendChild(th); // Append the header cell to the header row
+         };
+         thead.appendChild(tr); // Append the header row to the header
+         table.append(tr) 
+            for(let i = 2; i < jsonData.length; i++) {
+    let obj = jsonData[i];
+    if(obj.length==4){
+        // console.log(obj);
+        let tr = document.createElement("tr");
+            
+            // Get the values of the current object in the JSON data
+            let vals = Object.values(obj);
+            
+            // Loop through the values and create table cells
+            vals.forEach((elem) => {
+               let td = document.createElement("td");
+               td.innerText = elem; // Set the value as the text of the table cell
+               tr.appendChild(td); // Append the table cell to the table row
+            });
+            table.appendChild(tr);
+        // currrow=currrow+1;
+    }
+}
+container.appendChild(table)
+}
+
+// var currrow=0;
+let prevrow=0;
+createtable()
+async function checkForNewRows() {
+    // console.log(prevrow)
+    var currrow=0;
+    const excelURL = 'https://docs.google.com/spreadsheets/d/1xTzdGStzkXcx3TXTJ5Qsbt_DHCuiYJabm147_NqDhAA/edit#gid=0';
+    const jsonData= await readExcelFromURL(excelURL);
+            // const currentRowCount =  externalTable.rows.length;
+          
+ 
+            for(let i = 0; i < jsonData.length; i++) {
+    let obj = jsonData[i];
+    if(obj.length==4){
+        // console.log(obj);
+        
+        currrow=currrow+1;
+    }
+}
+// console.log(currrow)
+if(prevrow === undefined){
+    currrow=prevrow;
+}
+
+else if (currrow > prevrow ){
+    // var prevrow=currrow;
+    console.log(prevrow)
+    let table = document.createElement("table");
+    let tr = document.createElement("tr");
+            
+            // Get the values of the current object in the JSON data
+            let vals = Object.values(jsonData[currrow-1]);
+            
+            // Loop through the values and create table cells
+            vals.forEach((elem) => {
+               let td = document.createElement("td");
+               td.innerText = elem; // Set the value as the text of the table cell
+               tr.appendChild(td); // Append the table cell to the table row
+            });
+            table.appendChild(tr);
+            // console.log(currrow-1)
+            container.appendChild(table)
+    alert("There is a new attendance recorded " + jsonData[currrow-1][3]);
+    prevrow=currrow;
+    }
+    // currrow=0;
+            // if (currentRowCount > previousRowCount) {
+            //     console.log('A new row has been added!');
+            //     previousRowCount = currentRowCount;
+            // }
+
+            // Poll every 2 seconds (adjust as needed)
+            setTimeout(checkForNewRows, 1000);
+        }
+
+        checkForNewRows()
+    </script>
+</body>
+</html>
